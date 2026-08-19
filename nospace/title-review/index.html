@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <title>最终标题标注审核</title>
+    <style>
+      :root { color-scheme: light; font-family: "Noto Sans SC", "PingFang SC", sans-serif; background: #eef0ec; color: #171b18; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+      main { width: min(440px, 100%); background: #fff; border: 1px solid #d8ded5; border-radius: 8px; padding: 28px; box-shadow: 0 18px 48px rgba(28, 38, 31, .10); }
+      .mark { width: 34px; height: 5px; background: #087f5b; margin-bottom: 24px; }
+      h1 { margin: 0; font-size: 22px; font-weight: 760; letter-spacing: 0; }
+      p { margin: 9px 0 0; color: #657065; line-height: 1.6; }
+      .status { display: flex; align-items: center; gap: 10px; margin-top: 25px; padding-top: 18px; border-top: 1px solid #e3e7e0; font-size: 13px; font-weight: 700; }
+      .pulse { width: 9px; height: 9px; border-radius: 50%; background: #087f5b; animation: pulse 1.2s ease-in-out infinite; }
+      nav { display: none; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+      nav.visible { display: grid; }
+      a { min-width: 0; padding: 10px 12px; border: 1px solid #cfd6cd; border-radius: 6px; color: #27312a; text-align: center; text-decoration: none; font-size: 13px; font-weight: 700; }
+      a.primary { border-color: #087f5b; background: #087f5b; color: #fff; }
+      @keyframes pulse { 50% { opacity: .28; transform: scale(.75); } }
+      @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark"></div>
+      <h1>最终标题标注审核</h1>
+      <p>正在选择可用的访问通道。</p>
+      <div class="status" role="status" aria-live="polite"><span class="pulse"></span><span id="statusText">连接上海服务</span></div>
+      <nav id="choices">
+        <a href="https://113.44.66.120/title-review/">上海直连</a>
+        <a class="primary" href="https://mannycooper-nospace-storage.hf.space/title-review/">兼容入口</a>
+      </nav>
+    </main>
+    <script>
+      const directUrl = "https://113.44.66.120/title-review/";
+      const compatUrl = "https://mannycooper-nospace-storage.hf.space/title-review/";
+      const params = new URLSearchParams(location.search);
+      const statusText = document.getElementById("statusText");
+      const choices = document.getElementById("choices");
+
+      function enter(url, label) {
+        statusText.textContent = label;
+        location.replace(url);
+      }
+
+      async function chooseRoute() {
+        if (params.has("compat")) return enter(compatUrl, "进入兼容通道");
+        if (params.has("direct")) return enter(directUrl, "进入上海服务");
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2500);
+        try {
+          await fetch(`${directUrl}api/status?probe=${Date.now()}`, { mode: "no-cors", cache: "no-store", signal: controller.signal });
+          enter(directUrl, "进入上海服务");
+        } catch {
+          enter(compatUrl, "切换兼容通道");
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+
+      setTimeout(() => choices.classList.add("visible"), 5000);
+      chooseRoute();
+    </script>
+  </body>
+</html>
